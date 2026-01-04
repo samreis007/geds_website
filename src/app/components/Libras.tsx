@@ -6,40 +6,43 @@ const Libras = () => {
 
   useEffect(() => {
     setMounted(true);
-    // Verificar se o script já existe para evitar carregamentos duplicados
-    const existingScript = document.getElementById('vlibras-script');
 
-    const initWidget = () => {
-      if (window.VLibras && window.VLibras.Widget) {
-        try {
-          new window.VLibras.Widget('https://vlibras.gov.br/app');
-        } catch (e) {
-          console.error('Erro ao inicializar VLibras:', e);
-        }
+    const scriptId = 'vlibras-script';
+    let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+    const initVLibras = () => {
+      const w = window as any;
+      if (w.VLibras && typeof w.VLibras.Widget === 'function') {
+        new w.VLibras.Widget('https://vlibras.gov.br/app');
       }
-    };
+    }
 
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.id = 'vlibras-script';
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
       script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
       script.async = true;
-      script.onload = initWidget;
+      script.onload = () => {
+        // Pequeno delay para garantir que o script carregou no window
+        setTimeout(initVLibras, 500);
+      };
       document.body.appendChild(script);
     } else {
-      initWidget();
+      initVLibras();
     }
+
+    // Cleanup para evitar duplicação em desenvolvimento (Strict Mode)
+    return () => {
+      // Opcional: remover elementos injetados pelo VLibras se necessário
+    };
   }, []);
 
   if (!mounted) return null;
 
   return (
-    <div {...{ 'vw': 'true' }} className="enabled fixed top-1/2 -translate-y-1/2 right-0 z-[9999]">
-      <div
-        {...{ 'vw-access-button': 'true' }}
-        className="active"
-      />
-      <div {...{ 'vw-plugin-wrapper': 'true' }}>
+    <div {...({ 'vw': 'true' } as any)} className="enabled">
+      <div {...({ 'vw-access-button': 'true' } as any)} className="active" />
+      <div {...({ 'vw-plugin-wrapper': 'true' } as any)}>
         <div className="vw-plugin-top-wrapper" />
       </div>
     </div>
