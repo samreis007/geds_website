@@ -63,3 +63,20 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #00a3be;
 }
+
+/* Garante que o VLibras fique visível e acima de outros elementos */
+[vw] {
+  position: fixed;
+  z-index: 999999 !important;
+  display: block !important;
+}
+
+[vw].enabled {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.vw-plugin-wrapper {
+  display: block !important;
+}

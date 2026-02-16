@@ -1,17 +1,31 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react';
 import Script from 'next/script';
 
 const Libras = () => {
   useEffect(() => {
-    const w = window as any;
-    if (w.VLibras && typeof w.VLibras.Widget === 'function') {
-      if (!document.querySelector('.vw-plugin-wrapper')) {
-        new w.VLibras.Widget('https://vlibras.gov.br/app');
+    const initVLibras = () => {
+      const w = window as any;
+      if (w.VLibras && typeof w.VLibras.Widget === 'function') {
+        // Verificamos se o VLibras já injetou o conteúdo. 
+        // Se a div 'vw-plugin-wrapper' estiver vazia (só com a div top), inicializamos.
+        const wrapper = document.querySelector('[vw-plugin-wrapper]');
+        if (wrapper && wrapper.children.length <= 1) {
+          try {
+            new w.VLibras.Widget('https://vlibras.gov.br/app');
+          } catch (e) {
+            // Ignora erro se já estiver inicializado
+          }
+        }
       }
-    }
+    };
+
+    // Fica checando a cada 1 segundo se o bonequinho está lá. 
+    // Se sumir (no F5 ou troca de página), ele coloca de novo.
+    const interval = setInterval(initVLibras, 1500);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -19,14 +33,12 @@ const Libras = () => {
       <Script
         src="https://vlibras.gov.br/app/vlibras-plugin.js"
         strategy="afterInteractive"
-        onReady={() => {
+        onLoad={() => {
           const w = window as any;
           if (w.VLibras && typeof w.VLibras.Widget === 'function') {
-            // Verifica se já não foi inicializado para evitar duplicatas
-            if (!w.vlibrasInitialized) {
+            try {
               new w.VLibras.Widget('https://vlibras.gov.br/app');
-              w.vlibrasInitialized = true;
-            }
+            } catch (e) { }
           }
         }}
       />
