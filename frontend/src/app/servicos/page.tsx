@@ -32,7 +32,7 @@ const Services = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const client = supabase as any;
+        const client = supabase;
         if (!client) {
           console.warn('Supabase not configured, skipping fetchServices');
           setLoading(false);
@@ -45,8 +45,8 @@ const Services = () => {
           .order('id', { ascending: true });
 
         if (error) throw error;
-        if (data) setServices(data);
-      } catch (error: any) {
+        if (data) setServices(data as Service[]);
+      } catch (error) {
         console.error('Erro ao buscar serviços:', error);
       } finally {
         setLoading(false);

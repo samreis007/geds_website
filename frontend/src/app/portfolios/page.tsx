@@ -6,6 +6,7 @@ import Image from "next/image";
 import SquareReveal from "../components/SquareReveal";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
 interface Project {
   title: string;
@@ -30,7 +31,7 @@ export default function PortfoliosPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const client = supabase as any;
+        const client = supabase;
         if (!client) {
           console.warn('Supabase not configured, skipping fetchData in Portfolios');
           setLoading(false);
@@ -38,40 +39,40 @@ export default function PortfoliosPage() {
         }
 
         // Buscar todos os usuários
-        const { data: users, error: userError } = await client
+        const { data: users, error: userError } = await (client
           .from('usuarios')
-          .select('*');
+          .select('*') as unknown as Promise<PostgrestResponse<Record<string, unknown>>>);
 
         if (userError) throw userError;
 
         if (users) {
-          const colabs: Collaborator[] = await Promise.all(users.map(async (user: any) => {
+          const colabs: Collaborator[] = await Promise.all(users.map(async (user: Record<string, unknown>) => {
             // Buscar projetos de cada usuário
-            const { data: projects, error: projectError } = await client
+            const { data: projects, error: projectError } = await (client
               .from('projetos')
               .select('*')
-              .eq('proprietario_id', user.id);
+              .eq('proprietario_id', user.id as string) as unknown as Promise<PostgrestResponse<Record<string, unknown>>>);
 
             if (projectError) throw projectError;
 
             return {
-              name: user.nome,
-              role: user.cargo,
-              bio: user.biografia,
-              github: user.url_github,
-              avatar: user.url_avatar || "/eusinho.jpg",
-              projects: (projects || []).map((p: any) => ({
-                title: p.titulo,
-                link: p.url_repositorio || p.url_deploy || "#",
-                description: p.descricao,
-                techs: p.tecnologias || [],
+              name: user.nome as string,
+              role: user.cargo as string,
+              bio: user.biografia as string,
+              github: user.url_github as string,
+              avatar: (user.url_avatar as string) || "/eusinho.jpg",
+              projects: (projects || []).map((p: Record<string, unknown>) => ({
+                title: p.titulo as string,
+                link: (p.url_repositorio as string) || (p.url_deploy as string) || "#",
+                description: p.descricao as string,
+                techs: (p.tecnologias as string[]) || [],
               }))
             };
           }));
 
           setCollaborators(colabs);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Erro ao buscar portfolios:', error);
       } finally {
         setLoading(false);

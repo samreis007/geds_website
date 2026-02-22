@@ -46,15 +46,15 @@ export default function Contact() {
   const onSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
     try {
-      const client = supabase as any;
+      const client = supabase;
       if (!client) {
         alert("Serviço de mensagens indisponível no momento.");
         setIsSubmitting(false);
         return;
       }
 
-      const { error } = await client
-        .from('contatos')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (client.from('contatos') as any)
         .insert([
           {
             nome: data.name,
@@ -69,7 +69,7 @@ export default function Contact() {
 
       alert(`Obrigado pela mensagem, ${data.name}! Entraremos em contato em breve.`);
       form.reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao enviar mensagem:', error);
       alert('Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente mais tarde.');
     } finally {
