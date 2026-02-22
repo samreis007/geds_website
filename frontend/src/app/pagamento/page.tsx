@@ -4,6 +4,7 @@ import NextImage from 'next/image';
 import Head from 'next/head';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { FiCheckCircle } from 'react-icons/fi';
 
 import jsPDF from 'jspdf';
@@ -175,26 +176,26 @@ const PaymentContent = () => {
     setPagamentoFinalizado(true);
 
     try {
-      const client = supabase as any;
+      const client = supabase;
       if (!client) {
         console.warn('Supabase not configured, skipping payment registration');
         return;
       }
 
-      const { data: userData } = await client
+      const { data: userData } = await (client
         .from('usuarios')
         .select('id')
         .eq('email', 'edmilson@gedsinovacao.com')
-        .single();
+        .single() as unknown as Promise<PostgrestSingleResponse<Record<string, unknown>>>);
 
-      const { data: planData } = await client
+      const { data: planData } = await (client
         .from('planos')
         .select('id')
         .eq('nome', planName)
-        .single();
+        .single() as unknown as Promise<PostgrestSingleResponse<Record<string, unknown>>>);
 
-      const { error } = await client
-        .from('pagamentos')
+      const { error } = await (client
+        .from('pagamentos') as unknown as { insert: (data: Record<string, unknown>[]) => Promise<{ error: unknown }> })
         .insert([
           {
             usuario_id: userData?.id,
@@ -210,7 +211,7 @@ const PaymentContent = () => {
         ]);
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao registrar pagamento:', error);
     }
 

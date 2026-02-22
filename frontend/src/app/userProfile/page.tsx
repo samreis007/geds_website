@@ -6,6 +6,7 @@ import Image from 'next/image';
 import SquareReveal from '../components/SquareReveal';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
+import { PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
 
 interface UserData {
   name: string;
@@ -33,7 +34,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const client = supabase as any;
+        const client = supabase;
         if (!client) {
           console.warn('Supabase not configured, skipping fetchUser');
           setLoading(false);
@@ -41,41 +42,41 @@ const UserProfile = () => {
         }
 
         // Buscando o usuário administrador como exemplo
-        const { data, error } = await client
+        const { data, error } = await (client
           .from('usuarios')
           .select('*')
           .eq('email', 'edmilson@gedsinovacao.com')
-          .single();
+          .single() as unknown as Promise<PostgrestSingleResponse<Record<string, unknown>>>);
 
         if (error) throw error;
 
         if (data) {
           // Buscando total de projetos para o usuário
-          const { count: projectCount } = await client
+          const { count: projectCount } = await (client
             .from('projetos')
             .select('*', { count: 'exact', head: true })
-            .eq('proprietario_id', data.id);
+            .eq('proprietario_id', (data as { id: string }).id) as unknown as Promise<PostgrestResponse<Record<string, unknown>>>);
 
           setUser({
-            name: data.nome,
-            role: data.cargo,
-            avatar: data.url_avatar || "https://randomuser.me/api/portraits/men/32.jpg",
-            bio: data.biografia,
-            email: data.email,
-            skills: data.habilidades || [],
+            name: (data as Record<string, unknown>).nome as string,
+            role: (data as Record<string, unknown>).cargo as string,
+            avatar: ((data as Record<string, unknown>).url_avatar as string) || "https://randomuser.me/api/portraits/men/32.jpg",
+            bio: (data as Record<string, unknown>).biografia as string,
+            email: (data as Record<string, unknown>).email as string,
+            skills: ((data as Record<string, unknown>).habilidades as string[]) || [],
             stats: {
               projects: projectCount || 0,
-              experience: data.experiencia_anos || 0,
-              clients: data.total_clientes || 0
+              experience: ((data as Record<string, unknown>).experiencia_anos as number) || 0,
+              clients: ((data as Record<string, unknown>).total_clientes as number) || 0
             },
             socials: {
-              github: data.url_github,
-              linkedin: data.url_linkedin,
-              twitter: data.url_twitter
+              github: (data as Record<string, unknown>).url_github as string,
+              linkedin: (data as Record<string, unknown>).url_linkedin as string,
+              twitter: (data as Record<string, unknown>).url_twitter as string
             }
           });
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Erro ao buscar perfil:', error);
       } finally {
         setLoading(false);

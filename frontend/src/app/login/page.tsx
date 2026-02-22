@@ -50,7 +50,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const client = supabase as any;
+      const client = supabase;
       if (!client) {
         setError("Serviço de autenticação indisponível.");
         setLoading(false);
@@ -68,9 +68,9 @@ export default function LoginPage() {
         // You might want to handle 'stayLogged' here if you have specific logic for persistence
         router.push("/userProfile");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro no login:", err);
-      setError(err?.message || "Credenciais inválidas ou erro no servidor");
+      setError((err as Error)?.message || "Credenciais inválidas ou erro no servidor");
     } finally {
       setLoading(false);
     }
